@@ -1,8 +1,9 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { appConfig } from './config/app.config';
 import { OAuthProviderFactory } from './providers/oauth.provider.factory';
 import { OAuthProfile, OAuthProvider } from './types/oauth';
+
 import {
   InvalidProviderException,
   InvalidRedirectUriException,

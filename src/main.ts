@@ -13,7 +13,9 @@ async function bootstrap() {
   // ============================================
   // CORS configuration
   // ============================================
-  const backendUrl = configService.get<string>(`${appConfig.KEY}.backendUrl`);
+  const backendUrl = configService.get<string>(
+    `${String(appConfig.KEY)}.backendUrl`,
+  );
   app.enableCors({
     origin: backendUrl,
     methods: 'POST',
@@ -65,8 +67,10 @@ async function bootstrap() {
   // ============================================
   // Server configuration
   // ============================================
-  const port = configService.get<number>(`${appConfig.KEY}.port`);
-  const environment = configService.get<string>(`${appConfig.KEY}.environment`);
+  const port = configService.get<number>(`${String(appConfig.KEY)}.port`);
+  const environment = configService.get<string>(
+    `${String(appConfig.KEY)}.environment`,
+  );
 
   console.log('\\n' + '='.repeat(60));
   console.log('🚀 OAuth Authentication Microservice');
@@ -77,7 +81,10 @@ async function bootstrap() {
   console.log(`Swagger Docs: http://localhost:${port}/api/docs`);
   console.log('='.repeat(60) + '\\n');
 
-  await app.listen(port);
+  await app.listen(port || 3000);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Ошибка при запуске приложения:', err);
+  process.exit(1); // Завершаем процесс с кодом ошибки
+});

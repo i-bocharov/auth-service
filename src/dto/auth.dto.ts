@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsUrl, Matches } from 'class-validator';
-import { OAuthProvider } from '../types/oauth';
+import type { OAuthProvider } from '../types/oauth';
 
 /**
  * DTO для запроса аутентификации с полной валидацией

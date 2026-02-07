@@ -15,7 +15,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { OAuthProvider } from './types/oauth';
+import type { OAuthProvider } from './types/oauth';
 import { AuthRequestDto, UserProfileDto } from './dto/auth.dto';
 
 /**

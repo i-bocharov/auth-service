@@ -10,7 +10,7 @@ export const appConfig = registerAs('app', () => ({
    * @default 3001
    * @environment PORT
    */
-  port: parseInt(process.env.PORT, 10) || 3001,
+  port: parseInt(process.env.PORT || '3001', 10),
 
   /**
    * Окружение

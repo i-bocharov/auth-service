@@ -1,9 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Inject } from '@nestjs/common';
-import { yandexConfig, YandexConfig } from '../../config/yandex.config';
+import { yandexConfig } from '../../config/yandex.config';
+import type { YandexConfig } from '../../config/yandex.config';
 import { OAuthProviderBase } from '../base/oauth.provider.base';
-import { OAuthProfile } from '../../types/oauth';
+import type { OAuthProfile } from '../../types/oauth';
+
+/**
+ * Тип ответа Яндекса с информацией о пользователе
+ * @see https://yandex.ru/dev/id/doc/ru/user-information
+ */
+interface YandexProfileResponse {
+  id: string;
+  login: string;
+  default_email?: string;
+  emails?: string[];
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+  real_name?: string;
+  default_avatar_id?: string;
+  is_avatar_empty?: boolean;
+  sex?: 'male' | 'female' | 'not_specified';
+  birthday?: string;
+  native_default_email?: string;
+}
 
 /**
  * Провайдер аутентификации через Яндекс
@@ -43,8 +64,10 @@ export class YandexProvider extends OAuthProviderBase {
    * Получение профиля пользователя от Яндекса
    * @see https://yandex.ru/dev/id/doc/ru/user-information
    */
-  protected async fetchUserProfile(accessToken: string): Promise<any> {
-    const response = await this.httpService.axiosRef.get(
+  protected async fetchUserProfile(
+    accessToken: string,
+  ): Promise<YandexProfileResponse> {
+    const { data } = await this.httpService.axiosRef.get<YandexProfileResponse>(
       this.config.userInfoUrl,
       {
         headers: {
@@ -56,13 +79,13 @@ export class YandexProvider extends OAuthProviderBase {
       },
     );
 
-    return response.data;
+    return data;
   }
 
   /**
    * Преобразование профиля Яндекса в универсальный формат
    */
-  protected transformProfile(rawProfile: any): OAuthProfile {
+  protected transformProfile(rawProfile: YandexProfileResponse): OAuthProfile {
     return {
       provider: 'yandex' as const,
       providerId: rawProfile.id,
