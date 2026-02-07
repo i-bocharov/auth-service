@@ -1,10 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth.module';
+import { appConfig } from './config/app.config';
+import { yandexConfig } from './config/yandex.config';
 
+/**
+ * Корневой модуль приложения
+ */
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    // Глобальная конфигурация
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, yandexConfig],
+      envFilePath: ['.env'],
+    }),
+
+    // Модуль аутентификации
+    AuthModule,
+  ],
 })
 export class AppModule {}
