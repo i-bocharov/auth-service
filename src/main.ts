@@ -1,29 +1,52 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ValidationError } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import basicAuth from 'express-basic-auth';
 import { AppModule } from './app.module';
-import { appConfig } from './config/app.config';
+import { AppConfig } from './config/app.config';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   // ============================================
-  // CORS configuration
+  // Получение конфигурации приложения
   // ============================================
-  const backendUrl = configService.get<string>(
-    `${String(appConfig.KEY)}.backendUrl`,
-  );
-  app.enableCors({
-    origin: backendUrl,
-    methods: 'POST',
-    credentials: false,
-  });
+  const appConfigData = configService.get<AppConfig>('APP_CONFIG');
+  if (!appConfigData) {
+    throw new Error('App configuration not found. KEY: APP_CONFIG');
+  }
+
+  const { port, environment, backendUrl } = appConfigData;
 
   // ============================================
-  // Global validation pipe
+  // CORS + Helmet
+  // ============================================
+  app.enableCors({
+    origin: backendUrl,
+    methods: ['POST'],
+    credentials: false,
+  });
+  app.use(helmet());
+
+  // ============================================
+  // Rate limiting
+  // ============================================
+  app.use(
+    '/auth/:provider',
+    rateLimit({
+      windowMs: 60 * 1000, // 1 минута
+      max: 30, // максимум 30 запросов на IP в минуту
+      message: 'Too many authentication attempts, please try again later.',
+    }),
+  );
+
+  // ============================================
+  // Global Validation Pipe
   // ============================================
   app.useGlobalPipes(
     new ValidationPipe({
@@ -35,8 +58,8 @@ async function bootstrap() {
         target: false,
         value: false,
       },
-      exceptionFactory: (errors) => {
-        const messages = errors.map((err) =>
+      exceptionFactory: (errors: ValidationError[]) => {
+        const messages = errors.map((err: ValidationError) =>
           Object.values(err.constraints || {}).join(', '),
         );
         return new Error(`Validation failed: ${messages.join('; ')}`);
@@ -45,9 +68,20 @@ async function bootstrap() {
   );
 
   // ============================================
-  // Swagger documentation
+  // Swagger with BasicAuth
   // ============================================
-  const config = new DocumentBuilder()
+  const swaggerUsername = process.env.SWAGGER_USER || 'admin';
+  const swaggerPassword = process.env.SWAGGER_PASSWORD || 'admin';
+
+  app.use(
+    ['/api/docs', '/api/docs-json'],
+    basicAuth({
+      challenge: true,
+      users: { [swaggerUsername]: swaggerPassword },
+    }),
+  );
+
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('OAuth Authentication Microservice')
     .setDescription(
       'Микросервис аутентификации через OAuth провайдеров\\n\\n' +
@@ -58,20 +92,15 @@ async function bootstrap() {
     )
     .setVersion('1.0.0')
     .addTag('Authentication', 'Аутентификация через OAuth')
-    .addServer('http://localhost:3001', 'Development')
+    .addServer(`http://localhost:${port}`, 'Development')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
   // ============================================
-  // Server configuration
+  // Server logs
   // ============================================
-  const port = configService.get<number>(`${String(appConfig.KEY)}.port`);
-  const environment = configService.get<string>(
-    `${String(appConfig.KEY)}.environment`,
-  );
-
   console.log('\\n' + '='.repeat(60));
   console.log('🚀 OAuth Authentication Microservice');
   console.log('='.repeat(60));
@@ -81,10 +110,13 @@ async function bootstrap() {
   console.log(`Swagger Docs: http://localhost:${port}/api/docs`);
   console.log('='.repeat(60) + '\\n');
 
-  await app.listen(port || 3000);
+  await app.listen(port);
 }
 
-bootstrap().catch((err) => {
-  console.error('Ошибка при запуске приложения:', err);
-  process.exit(1); // Завершаем процесс с кодом ошибки
+bootstrap().catch((err: unknown) => {
+  console.error(
+    'Ошибка при запуске приложения:',
+    err instanceof Error ? err.message : String(err),
+  );
+  process.exit(1);
 });

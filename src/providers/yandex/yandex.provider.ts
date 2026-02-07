@@ -67,19 +67,21 @@ export class YandexProvider extends OAuthProviderBase {
   protected async fetchUserProfile(
     accessToken: string,
   ): Promise<YandexProfileResponse> {
-    const { data } = await this.httpService.axiosRef.get<YandexProfileResponse>(
-      this.config.userInfoUrl,
-      {
-        headers: {
-          Authorization: `OAuth ${accessToken}`,
-        },
-        params: {
-          format: 'json',
-        },
-      },
-    );
+    try {
+      const { data } =
+        await this.httpService.axiosRef.get<YandexProfileResponse>(
+          this.config.userInfoUrl,
+          {
+            headers: { Authorization: `OAuth ${accessToken}` },
+            params: { format: 'json' },
+          },
+        );
 
-    return data;
+      return data;
+    } catch (err) {
+      this.logger.error('Failed to fetch Yandex profile', err);
+      throw new Error('Unable to fetch Yandex user profile');
+    }
   }
 
   /**

@@ -20,6 +20,7 @@ import { yandexConfig } from './config/yandex.config';
     HttpModule.register({
       timeout: 5000,
       maxRedirects: 5,
+      validateStatus: (status) => status < 500, // не выбрасывать на  4xx
     }),
   ],
   controllers: [AuthController],

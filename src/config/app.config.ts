@@ -4,7 +4,7 @@ import { ConfigType, registerAs } from '@nestjs/config';
  * Основная конфигурация приложения
  * @description Централизованное управление настройками
  */
-export const appConfig = registerAs('app', () => ({
+export const appConfig = registerAs('APP_CONFIG', () => ({
   /**
    * Порт сервера
    * @default 3001
