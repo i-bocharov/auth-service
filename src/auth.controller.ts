@@ -6,6 +6,7 @@ import {
   Logger,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -85,7 +86,7 @@ export class AuthController {
   /**
    * Получение списка доступных провайдеров
    */
-  @Post('providers')
+  @Get('providers')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Получение списка доступных OAuth провайдеров',

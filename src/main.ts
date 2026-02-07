@@ -101,14 +101,14 @@ async function bootstrap(): Promise<void> {
   // ============================================
   // Server logs
   // ============================================
-  console.log('\\n' + '='.repeat(60));
+  console.log('='.repeat(60));
   console.log('🚀 OAuth Authentication Microservice');
   console.log('='.repeat(60));
   console.log(`Environment: ${environment}`);
   console.log(`Port: ${port}`);
   console.log(`Backend URL: ${backendUrl}`);
   console.log(`Swagger Docs: http://localhost:${port}/api/docs`);
-  console.log('='.repeat(60) + '\\n');
+  console.log('='.repeat(60));
 
   await app.listen(port);
 }
