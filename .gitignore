@@ -39,3 +39,6 @@ pnpm-debug.log*
 
 # Optional eslint cache
 .eslintcache
+
+# Tests
+/coverage
